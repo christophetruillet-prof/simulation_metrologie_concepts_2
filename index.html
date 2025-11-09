@@ -1,0 +1,93 @@
+<h2>🎲 Simulateur d'échantillons (100 valeurs par échantillon)</h2>
+
+<button onclick="nouvelleSimulation()">🎯 Tirer un nouvel échantillon</button>
+<button onclick="exporterCSV()">💾 Exporter en CSV</button>
+
+<p id="resume"></p>
+
+<table id="tableau" border="1" style="border-collapse: collapse; margin-top: 10px;">
+  <thead>
+    <tr id="entetes"></tr>
+  </thead>
+  <tbody id="corps"></tbody>
+</table>
+<script scr = "chartmin.js"></script>
+<script>
+// --- Paramètres ---
+const mu = 30;
+const sigma = 0.5;
+const tailleEchantillon = 100;
+const populationSize = 100000;
+
+// --- Génération de la population ---
+let population = [];
+for (let i = 0; i < populationSize; i++) {
+  let u = Math.random();
+  let v = Math.random();
+  let z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  population.push(mu + sigma * z);
+}
+
+// --- Stockage des échantillons ---
+let echantillons = []; // chaque élément est un tableau de 100 valeurs
+
+// --- Tirage d'un nouvel échantillon ---
+function nouvelleSimulation() {
+  let echantillon = [];
+  for (let i = 0; i < tailleEchantillon; i++) {
+    const index = Math.floor(Math.random() * population.length);
+    echantillon.push(population[index]);
+  }
+  echantillons.push(echantillon);
+  afficherTableau();
+}
+
+// --- Affichage du tableau ---
+function afficherTableau() {
+  const entetes = document.getElementById("entetes");
+  entetes.innerHTML = "";
+  echantillons.forEach((_, i) => {
+    entetes.innerHTML += `<th>Echantillon ${i + 1}</th>`;
+  });
+
+  const corps = document.getElementById("corps");
+  corps.innerHTML = "";
+
+  for (let i = 0; i < tailleEchantillon; i++) {
+    let ligne = "<tr>";
+    echantillons.forEach(ech => {
+      ligne += `<td>${ech[i].toFixed(3).replace('.', ',')}</td>`;
+    });
+    ligne += "</tr>";
+    corps.innerHTML += ligne;
+  }
+
+  document.getElementById("resume").innerHTML = 
+      `Nombre d'échantillons : <b>${echantillons.length}</b>`;
+}
+
+// --- Export CSV ---
+function exporterCSV() {
+  if (echantillons.length === 0) {
+    alert("Aucun échantillon à exporter !");
+    return;
+  }
+
+  let csv = "";
+  for (let i = 0; i < tailleEchantillon; i++) {
+    // Remplace le point décimal par une virgule dans chaque valeur
+    let ligne = echantillons
+      .map(ech => ech[i].toFixed(5).replace('.', ','))
+      .join(";");
+    csv += ligne + "\n";
+  }
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "echantillons.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
